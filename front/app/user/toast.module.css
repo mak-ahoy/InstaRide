@@ -1,0 +1,30 @@
+/* toast.module.css */
+.toastPosition {
+    padding: 0px;
+    margin:0px;
+    /* color: white; */
+    border-radius: 8px;
+    max-width: 300px; /* Adjust as needed */
+    top: 300px;
+    margin-top: 5px;
+    width: 100%;
+  }
+
+  .Toastify__toast-container {
+    padding: 0px;
+    margin: 0px;
+
+
+}
+
+.Toastify__toast > div {
+    width: 100%;
+}
+
+
+.Toastify__toast-body {
+
+    padding: 0px;
+    margin: 0px;
+
+}
