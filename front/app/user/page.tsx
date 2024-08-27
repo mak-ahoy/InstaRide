@@ -1,73 +1,64 @@
-"use client"
+"use client";
 
-import Card from '@/components/Card'
-import NavBar from '@/components/NavBar'
-import React, { useState, useEffect } from 'react'
-import { socket } from '@/socket'
-import { toast, ToastContainer, cssTransition } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
-import styles from './toast.module.css' // Import CSS module
-import "animate.css/animate.min.css";
-
+import React, { useState, useEffect } from "react";
+import { CSSTransition, TransitionGroup } from "react-transition-group";
+import Card from "@/components/Card";
+import NavBar from "@/components/NavBar";
+import { socket } from "@/socket";
+import "./animations.css";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 
 type Offer = {
   user: string;
   from: string;
   to: string;
   amount: string;
-}
+};
 
-const bounce = cssTransition({
-  enter: "animate__animated animate__fadeInUpBig",
-  exit: "animate__animated   animate__fadeOutUpBig"
-});
-
-
-const CustomCard = ({ offer }: { offer: Offer }) => (
-  <div className={`card bg-neutral text-neutral-content w-full border rounded-lg shadow-sm ${styles.customCard}`}>
-    <div className="card-body p-3 min-w-full">
-      <h2 className="card-title text-lg font-semibold mb-2">Offer</h2>
-      <div className="text-sm mb-3">
-        <p><strong>User: </strong>{offer.user}</p>
-        <p><strong>From: </strong>{offer.from}</p>
-        <p><strong>To: </strong>{offer.to}</p>
-        <p><strong>Amount: </strong><span className="font-semibold">{offer.amount}</span></p>
-      </div>
-      <div className="card-actions flex justify-between">
-        <button className="btn btn-error text-white text-xs font-semibold py-1 px-3 rounded-md transition-transform transform hover:scale-105">Accept</button>
-        <button className="btn btn-white border border-gray-300 text-white-700 text-xs font-semibold py-1 px-3 rounded-md transition-transform transform hover:scale-105">Deny</button>
-      </div>
-    </div>
-  </div>
-);
-
+const position: [number, number] = [51.505, -0.09]; // Leaflet position
 
 const Page = () => {
   const [offers, setOffers] = useState<Offer[]>([]);
-  const [visibleOffers, setVisibleOffers] = useState<Offer[]>([]);
+  const [showingOffers, setShowingOffers] = useState<Offer[]>([]);
+  const [coord, setCoord] = useState<any>([51.505, -0.09])
+
+
+  function getLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position)=>{
+        setCoord([position.coords.latitude, position.coords.longitude])
+
+      });
+    } else { 
+      setCoord(null)
+    }
+  }
 
   useEffect(() => {
-    // Function to show the toast notifications with a delay
+    getLocation();
     const showOffersWithDelay = (offers: Offer[]) => {
       offers.forEach((offer, index) => {
         setTimeout(() => {
-          
-        }, index * 500); // Delay each toast by 1 second
+          setShowingOffers((prevOffers) => [...prevOffers, offer]);
+          setTimeout(() => {
+            setShowingOffers((prevOffers) =>
+              prevOffers.filter((o) => o !== offer)
+            );
+          }, 10000); // Remove after 10 seconds
+        }, index * 500); // Delay each offer
       });
     };
 
-    // Set up the socket listener
     socket.on("offers", (newOffers: Offer[]) => {
-      setOffers(newOffers);
-      showOffersWithDelay(newOffers); // Show toast for new offers
+      setOffers([]);
+      showOffersWithDelay(newOffers);
     });
 
-    // Clean up the socket listener on component unmount
     return () => {
       socket.off("offers");
     };
   }, []);
-
 
   const handleGetOffers = () => {
     socket.emit("send_offers");
@@ -77,29 +68,49 @@ const Page = () => {
     <>
       <div className="flex flex-col items-center bg-slate-700 min-h-screen">
         <NavBar />
-        <h1 className="text-center mt-20 mb-8 text-white text-3xl font-bold">Available Offers</h1>
+
+        <div className="w-full h-64">
+          <MapContainer center={coord} zoom={13} scrollWheelZoom={false} style={{ height: "100%", width: "100%" }}>
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <Marker position={position}>
+              <Popup>
+                A pretty CSS3 popup. <br /> Easily customizable.
+              </Popup>
+            </Marker>
+          </MapContainer>
+        </div>
+
+        <h1 className="text-center mt-20 mb-8 text-white text-3xl font-bold">
+          Available Offers
+        </h1>
         <button
           className="bg-blue-500 text-white px-4 py-2 rounded mt-4 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
           onClick={handleGetOffers}
         >
           Get Offers
         </button>
+        {showingOffers.length === 0 && (
+          <p className="text-white text-center mt-5">No offers available</p>
+        )}
         <div className="flex flex-col items-center w-full max-w-4xl mt-8 px-4">
-        {offers.length > 0 ? (
-            <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1">
-              {offers.map((offer, index) => (
-                <Card key={index} data={offer} />
-              ))}
-            </div>
-          ) : (
-            <p className="text-white text-center">No offers available</p>
-          )}
-        </div>
-        <div>
+          <TransitionGroup className="grid gap-6 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1">
+            {showingOffers.map((offer, index) => (
+              <CSSTransition
+                key={index}
+                timeout={700} // Duration of the animation
+                classNames="fade" // Prefix for CSS classes
+              >
+                <Card data={offer} timeLeft={10000} />
+              </CSSTransition>
+            ))}
+          </TransitionGroup>
         </div>
       </div>
     </>
   );
-}
+};
 
 export default Page;
