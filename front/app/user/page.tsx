@@ -6,8 +6,6 @@ import Card from "@/components/Card";
 import NavBar from "@/components/NavBar";
 import { socket } from "@/socket";
 import "./animations.css";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
 
 type Offer = {
   user: string;
@@ -16,31 +14,20 @@ type Offer = {
   amount: string;
 };
 
-const position: [number, number] = [51.505, -0.09]; // Leaflet position
-
 const Page = () => {
-  const [offers, setOffers] = useState<Offer[]>([]);
   const [showingOffers, setShowingOffers] = useState<Offer[]>([]);
-  const [coord, setCoord] = useState<any>([51.505, -0.09])
-
-
-  function getLocation() {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position)=>{
-        setCoord([position.coords.latitude, position.coords.longitude])
-
-      });
-    } else { 
-      setCoord(null)
-    }
-  }
 
   useEffect(() => {
-    getLocation();
     const showOffersWithDelay = (offers: Offer[]) => {
       offers.forEach((offer, index) => {
         setTimeout(() => {
-          setShowingOffers((prevOffers) => [...prevOffers, offer]);
+          setShowingOffers((prevOffers) => {
+            const updatedOffers = [...prevOffers, offer];
+            if (updatedOffers.length > 5) {
+              updatedOffers.shift(); // Maintain a max limit if needed
+            }
+            return updatedOffers;
+          });
           setTimeout(() => {
             setShowingOffers((prevOffers) =>
               prevOffers.filter((o) => o !== offer)
@@ -50,13 +37,27 @@ const Page = () => {
       });
     };
 
+    // Single event listener for "offers"
     socket.on("offers", (newOffers: Offer[]) => {
-      setOffers([]);
       showOffersWithDelay(newOffers);
     });
 
+    // Single event listener for "new-offer"
+    socket.on("new-offer", (offer: Offer) => {
+      // setShowingOffers((prevOffers) => {
+      //   const updatedOffers = [offer, ...prevOffers];
+      //   if (updatedOffers.length > 5) {
+      //     updatedOffers.pop(); // Maintain a max limit if needed
+      //   }
+      //   return updatedOffers;
+      // });
+      showOffersWithDelay([offer, ...showingOffers])
+    });
+
+    // Cleanup
     return () => {
       socket.off("offers");
+      socket.off("new-offer");
     };
   }, []);
 
@@ -67,33 +68,21 @@ const Page = () => {
   return (
     <>
       <div className="flex flex-col items-center bg-slate-700 min-h-screen">
-        <NavBar />
-
-        <div className="w-full h-64">
-          <MapContainer center={coord} zoom={13} scrollWheelZoom={false} style={{ height: "100%", width: "100%" }}>
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <Marker position={position}>
-              <Popup>
-                A pretty CSS3 popup. <br /> Easily customizable.
-              </Popup>
-            </Marker>
-          </MapContainer>
-        </div>
-
         <h1 className="text-center mt-20 mb-8 text-white text-3xl font-bold">
           Available Offers
         </h1>
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded mt-4 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          onClick={handleGetOffers}
-        >
-          Get Offers
-        </button>
+
         {showingOffers.length === 0 && (
-          <p className="text-white text-center mt-5">No offers available</p>
+          <>
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded mt-4 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onClick={handleGetOffers}
+            >
+              Get Offers
+            </button>
+
+            <p className="text-white text-center mt-5">No offers available</p>
+          </>
         )}
         <div className="flex flex-col items-center w-full max-w-4xl mt-8 px-4">
           <TransitionGroup className="grid gap-6 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1">

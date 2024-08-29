@@ -59,6 +59,12 @@ io.on("connection", (socket) => {
   socket.emit("offers", offers)
  })
 
+ socket.on("find-ride", (offer)=>{
+  console.log("recieved: ", offer)
+  socket.broadcast.emit("new-offer", offer)
+
+ })
+
 
 });
 

@@ -16,8 +16,8 @@ export default function Home() {
   return (
     <>
       <div className="bg-white">
-        <header className="absolute inset-x-0 top-0 z-50">
-          <nav className="flex items-center justify-between p-6 lg:px-8" aria-label="Global">
+        <header className="absolute inset-x-0 top-0">
+          {/* <nav className="flex items-center justify-between p-6 lg:px-8" aria-label="Global">
             <div className="flex lg:flex-1">
               <a href="#" className="-m-1.5 p-1.5">
                 <span className="sr-only">Your Company</span>
@@ -44,7 +44,7 @@ export default function Home() {
             <div className="hidden lg:flex lg:flex-1 lg:justify-end">
               <Link href="/login" className="text-sm font-semibold leading-6 text-gray-900">Log in <span aria-hidden="true">&rarr;</span></Link>
             </div>
-          </nav>
+          </nav> */}
           <div className={`lg:hidden fixed inset-0 z-50 transition-transform duration-300 ${isSidebarOpen ? '' : 'transform -translate-x-full'}`}>
             <div className="fixed inset-0 bg-gray-900/50" onClick={closeSidebar}></div>
             <div className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
@@ -98,8 +98,8 @@ export default function Home() {
 </h1>
               <p className="mt-6 text-lg leading-8 text-gray-600">Discover the Ultimate Platform for Riders and Drivers</p>
               <div className="mt-10 flex items-center justify-center gap-x-6">
-                <a href="#" className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Get started</a>
-                <a href="#" className="text-sm font-semibold leading-6 text-gray-900">Learn more <span aria-hidden="true">→</span></a>
+                <a href="/signup" className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Sign up</a>
+                <Link href="/login" className="text-sm font-semibold leading-6 text-gray-900">Login <span aria-hidden="true">→</span></Link>
               </div>
             </div>
           </div>

@@ -1,4 +1,7 @@
+"use client"
+
 import React, { useEffect, useState } from 'react';
+import { useRouter } from "next/navigation";
 
 type CardProps = {
   data: {
@@ -10,7 +13,17 @@ type CardProps = {
   timeLeft: number;
 };
 
+
+
+
 const Card: React.FC<CardProps> = ({ data, timeLeft }) => {
+  const router = useRouter();
+
+
+  const handleGetLocation = ()=> {
+    router.push(`/map?user=${data.user}&from=${data.from}&to=${data.to}&amount=${data.amount}`);
+    // console.log(query)
+  }
   const [time, setTime] = useState(timeLeft);
 
   useEffect(() => {
@@ -41,7 +54,7 @@ const Card: React.FC<CardProps> = ({ data, timeLeft }) => {
           <p><strong>Amount: </strong><span className="font-semibold">{data.amount}</span></p>
         </div>
         <div className="card-actions flex justify-between">
-          <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full">
+          <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full" onClick={handleGetLocation}>
             Accept
           </button>
           <button className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full">
